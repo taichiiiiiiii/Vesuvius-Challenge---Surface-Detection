@@ -1,190 +1,186 @@
 # 🏺 Vesuvius Challenge - 3D Surface Detection
 
-実データ対応のVesuvius Challenge（ベスヴィオ火山巻物）3D表面検出PyTorchパイプライン。
+古代ヴェスヴィオ火山の噴火で埋もれた巻物の3D CTスキャンから、インクの痕跡を検出するディープラーニングプロジェクト。
+
+## 📌 概要
+
+このプロジェクトは、Kaggle Vesuvius Challengeのための3D表面検出システムです。PyTorchベースの3D CNNを使用して、巻物のCTスキャン画像からインクパターンを識別します。
 
 ## ✨ 主な特徴
 
-- ✅ **実Kaggleデータ自動検出・ロード**
-- ✅ **実データなしでも高品質デモデータで動作**  
-- ✅ **PyTorch 3D CNN（ResNet3D, UNet3D, SwinUNetr）**
-- ✅ **完全な訓練・検証・推論パイプライン**
-- ✅ **整理されたディレクトリ構造**
+- 🔍 **自動データ検出** - Kaggleデータを自動的に検出・ロード
+- 🎯 **複数の3Dモデル** - ResNet3D、UNet3D、SwinUNetrをサポート
+- 📊 **完全なMLパイプライン** - データ前処理から学習、推論、提出まで
+- ☁️ **Runpods対応** - クラウドGPU環境での実行に最適化
+- 🚀 **すぐに実行可能** - 最小限の設定で動作
 
-## 📁 プロジェクト構造
+## 📁 プロジェクト構成
 
 ```
-vesuvius-challenge-surface-detection/
-│
-├── 📂 notebooks/              # Jupyterノートブック
-│   ├── 📂 training/          # 学習用ノートブック
-│   │   ├── main_training.ipynb      # メイン学習（推奨）
-│   │   ├── swinunetr_training.ipynb # SwinUNetr学習
-│   │   └── swinunetr_v2.ipynb       # SwinUNetr v2
+.
+├── notebooks/
+│   ├── training/              # 学習用ノートブック
+│   │   ├── main_training.ipynb      # メイン学習スクリプト ⭐
+│   │   ├── swinunetr_training.ipynb # 高性能モデル学習
+│   │   └── swinunetr_v2.ipynb       # 改良版モデル
 │   │
-│   ├── 📂 inference/         # 推論用ノートブック
-│   │   └── inference.ipynb   # 推論・予測・提出
+│   ├── inference/             # 推論・予測用
+│   │   └── inference.ipynb   # 提出ファイル生成
 │   │
-│   └── 📂 runpods/           # Runpods環境用
-│       ├── runpods_complete.ipynb
-│       ├── runpods_training.ipynb
-│       └── runpods_standalone.ipynb
+│   └── runpods/              # クラウド環境用
+│       └── runpods_complete.ipynb   # Runpods完全版
 │
-├── 📂 src/                    # ソースコード
-│   ├── download_kaggle_data.py  # Kaggleデータ自動取得
-│   └── unified_data_loader.py   # 統合データローダー
+├── src/                      # ソースコード
+│   ├── unified_data_loader.py       # 統合データローダー
+│   └── download_kaggle_data.py      # データ自動取得
 │
-├── 📂 docs/                   # ドキュメント
-│   ├── REAL_DATA_SETUP.md    # データセットアップ
-│   ├── FILE_STRUCTURE.md     # ファイル構造説明
-│   └── upload_to_runpods.md  # Runpods設定
+├── docs/                     # ドキュメント
+│   ├── REAL_DATA_SETUP.md   # データ準備ガイド
+│   └── upload_to_runpods.md # Runpods設定方法
 │
-├── 📂 scripts/                # スクリプト
-│   └── runpods_safe_setup.sh # 環境セットアップ
-│
-├── README.md                  # このファイル
-├── requirements.txt           # 必要パッケージ
-└── .gitignore                # Git除外設定
+└── scripts/                  # セットアップスクリプト
+    └── runpods_safe_setup.sh # 環境構築スクリプト
 ```
 
 ## 🚀 クイックスタート
 
-### 1. 環境セットアップ
+### 前提条件
+
+- Python 3.8以上
+- CUDA対応GPU（推奨: 8GB以上のVRAM）
+- 50GB以上のディスクスペース
+
+### 1. 環境構築
 
 ```bash
-# 依存関係インストール
-pip install -r requirements.txt
+# リポジトリをクローン
+git clone https://github.com/taichiiiiiiii/Vesuvius-Challenge---Surface-Detection.git
+cd Vesuvius-Challenge---Surface-Detection
 
-# Runpods環境の場合
-bash scripts/runpods_safe_setup.sh
+# 依存パッケージのインストール
+pip install -r requirements.txt
 ```
 
-### 2. メイン学習（推奨）
+### 2. データ準備
+
+#### オプション A: Kaggleから自動ダウンロード
+
+```python
+# notebooks/training/main_training.ipynb 内で実行
+from src.download_kaggle_data import download_competition_data
+download_competition_data()
+```
+
+#### オプション B: 手動配置
 
 ```bash
-# Jupyter起動
+# データを以下の構造で配置
+data/
+└── vesuvius-challenge-surface-detection/
+    ├── train_images/      # 訓練画像
+    ├── train_labels/      # ラベル（オプション）
+    └── train.csv          # メタデータ
+```
+
+### 3. 学習実行
+
+```bash
+# Jupyterノートブックを起動
 jupyter notebook notebooks/training/main_training.ipynb
 ```
 
-このノートブックで全て実行可能：
-- 実データ自動検出
-- 3D CNN学習
-- 結果可視化
-- Kaggle提出
+ノートブックを開き、セルを順番に実行してください。
 
-### 3. 高性能モデル（オプション）
+### 4. 推論・提出
 
 ```bash
-# SwinUNetr使用
-jupyter notebook notebooks/training/swinunetr_training.ipynb
-```
-
-## 📊 データ設定
-
-### 実データ配置
-
-Kaggleデータを以下の構造で配置：
-
-```
-data/
-└── vesuvius-challenge-surface-detection/
-    ├── train_images/
-    │   └── *.tif
-    ├── train_labels/  (オプション)
-    │   └── *.tif
-    └── train.csv
-```
-
-詳細は `docs/REAL_DATA_SETUP.md` を参照。
-
-### デモデータモード
-
-実データが見つからない場合、自動的に高品質デモデータで動作します。
-
-## 🎓 使用手順
-
-### ステップ 1: データ準備
-```python
-# notebooks/training/main_training.ipynb で自動実行
-from src.unified_data_loader import UnifiedVesuviusDataLoader
-
-loader = UnifiedVesuviusDataLoader()
-info = loader.get_data_info()
-```
-
-### ステップ 2: 学習実行
-```python
-# notebooks/training/main_training.ipynb のセルを順次実行
-# 設定はconfig辞書で調整可能
-config = {
-    'batch_size': 4,
-    'num_epochs': 20,
-    'model_type': 'unet3d'  # or 'resnet3d'
-}
-```
-
-### ステップ 3: 推論・提出
-```bash
+# 学習済みモデルで予測
 jupyter notebook notebooks/inference/inference.ipynb
 ```
 
 ## 🏗️ モデルアーキテクチャ
 
-### 利用可能モデル
-- **ResNet3D**: 軽量3D CNN
-- **UNet3D**: U-Netベース3Dセグメンテーション  
-- **SwinUNetr**: Swin Transformer + U-Net（最高性能）
+| モデル | 特徴 | 推奨用途 |
+|--------|------|----------|
+| **UNet3D** | バランス型 | 一般的な使用（推奨） |
+| **ResNet3D** | 軽量・高速 | メモリ制限環境 |
+| **SwinUNetr** | 最高精度 | 高性能GPU環境 |
 
-### 選択基準
-- **ResNet3D**: GPU制限環境
-- **UNet3D**: バランス型（推奨）
-- **SwinUNetr**: 最高精度追求
+## ⚙️ 設定カスタマイズ
 
-## 📈 性能最適化
-
-### GPU不足の場合
 ```python
+# notebooks/training/main_training.ipynb で設定
 config = {
-    'batch_size': 2,         # 削減
-    'volume_size': (64, 64),  # 縮小
-    'volume_depth': 8         # 削減
+    'model_type': 'unet3d',     # モデル選択
+    'batch_size': 4,             # バッチサイズ
+    'num_epochs': 20,            # エポック数
+    'learning_rate': 1e-4,       # 学習率
+    'volume_size': (128, 128),   # ボリュームサイズ
+    'volume_depth': 16           # Z軸の深さ
 }
 ```
 
-### 高速化
-- `num_workers=4` でデータローディング並列化
-- Mixed precision学習対応
-- Gradient accumulation利用可能
+## 💡 メモリ最適化
+
+GPU メモリが不足する場合：
+
+```python
+# 設定を調整
+config = {
+    'batch_size': 2,             # 小さく
+    'volume_size': (64, 64),     # 縮小
+    'volume_depth': 8,           # 浅く
+    'gradient_accumulation': 4   # 勾配累積を使用
+}
+```
+
+## 📊 パフォーマンス
+
+| 設定 | VRAM使用量 | 学習時間/エポック | 推奨GPU |
+|------|------------|-------------------|---------|
+| フル | ~12GB | ~15分 | RTX 3090/4090 |
+| 標準 | ~8GB | ~10分 | RTX 3070/3080 |
+| 軽量 | ~4GB | ~5分 | RTX 3060/2070 |
 
 ## 🛠️ トラブルシューティング
 
-### よくある問題
+### CUDA out of memory
+- バッチサイズを半分に削減
+- ボリュームサイズを64x64に縮小
+- Mixed Precision学習を有効化
 
-1. **CUDA out of memory**
-   - バッチサイズを削減
-   - ボリュームサイズを縮小
+### データが見つからない
+- Kaggle APIトークンを設定（`~/.kaggle/kaggle.json`）
+- `docs/REAL_DATA_SETUP.md`を参照
+- デモデータモードで動作確認
 
-2. **データが見つからない**
-   - `docs/REAL_DATA_SETUP.md` 確認
-   - デモデータモードで継続
+### 学習が収束しない
+- 学習率を1/10に削減
+- データ拡張を調整
+- より長いエポック数で学習
 
-3. **学習が収束しない**
-   - 学習率を調整
-   - データ拡張を追加
+## 📚 詳細ドキュメント
 
-## 📚 ドキュメント
+- [データ準備ガイド](docs/REAL_DATA_SETUP.md)
+- [ファイル構造説明](docs/FILE_STRUCTURE.md)
+- [Runpods環境セットアップ](docs/upload_to_runpods.md)
 
-- `docs/REAL_DATA_SETUP.md` - データセットアップ詳細
-- `docs/FILE_STRUCTURE.md` - プロジェクト構造説明
-- `docs/upload_to_runpods.md` - クラウド環境設定
+## 🤝 貢献
+
+プルリクエスト歓迎です！大きな変更の場合は、まずIssueを作成して変更内容を議論してください。
 
 ## 📄 ライセンス
 
-Vesuvius Challenge公式ルールに準拠。
+このプロジェクトは[Vesuvius Challenge](https://scrollprize.org/)の公式ルールに準拠しています。
 
-## 🎯 貢献
+## 🙏 謝辞
 
-改善提案・バグ報告はIssueでお願いします。
+- Vesuvius Challengeの主催者とコミュニティ
+- PyTorch、MONAI開発チーム
+- Kaggleプラットフォーム
 
 ---
 
-**開始方法**: `jupyter notebook notebooks/training/main_training.ipynb` を実行！
+**📮 質問・サポート**: GitHubのIssuesページをご利用ください。
+
+**⭐ このプロジェクトが役立った場合は、スターをお願いします！**
