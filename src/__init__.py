@@ -1,9 +1,14 @@
 """Vesuvius Challenge - Source Code Package"""
 
-from .kaggle_real_data_loader import KaggleVesuviusDataLoader
-from .real_vesuvius_dataset_v2 import RealVesuviusDatasetV2
+from .unified_data_loader import VesuviusDataset, create_data_loaders
+from .download_kaggle_data import (
+    setup_kaggle_credentials,
+    download_vesuvius_dataset,
+)
 
 __all__ = [
-    "KaggleVesuviusDataLoader",
-    "RealVesuviusDatasetV2"
+    "VesuviusDataset",
+    "create_data_loaders",
+    "setup_kaggle_credentials",
+    "download_vesuvius_dataset",
 ]

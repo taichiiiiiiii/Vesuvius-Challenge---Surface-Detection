@@ -1,95 +1,66 @@
 # Vesuvius Challenge - ファイル構造
 
-## 📁 整理後のファイル構成
+## 📁 リポジトリ構成
 
-### 🎯 メインファイル（重要）
+```
+.
+├── README.md                    # プロジェクト概要・使用方法
+├── CLAUDE.md                    # Claude Code 用プロジェクトコンテキスト
+├── SECURITY.md                  # セキュリティポリシー（認証情報の扱い方）
+├── requirements.txt             # Python依存パッケージ
+│
+├── notebooks/
+│   ├── nnunet/                  # ⭐ 現行実装（nnU-Net v2）
+│   │   └── vesuvius_nnunet_runpods.ipynb   # メイン学習パイプライン
+│   │
+│   ├── training/                # 旧実装（PyTorch / SwinUNETR）
+│   │   ├── main_training.ipynb          # 3D CNN学習（UNet3D / ResNet3D）
+│   │   ├── swinunetr_training.ipynb     # SwinUNETR学習
+│   │   └── swinunetr_v2.ipynb           # SwinUNETR改良版
+│   │
+│   ├── inference/               # 推論・提出
+│   │   └── inference.ipynb              # 提出ファイル生成
+│   │
+│   └── runpods/                 # Runpods向けオールインワン版（旧実装）
+│       ├── runpods_complete.ipynb
+│       ├── runpods_standalone.ipynb
+│       ├── runpods_training.ipynb
+│       ├── runpods_swinunetr_v2_complete.ipynb
+│       └── swinunetr_runpods_complete.ipynb
+│
+├── src/                         # 共通Pythonモジュール
+│   ├── __init__.py
+│   ├── unified_data_loader.py   # 統合データローダー（実データ/デモ自動切替）
+│   └── download_kaggle_data.py  # Kaggleデータ自動ダウンロード
+│
+├── scripts/                     # セットアップ・修正スクリプト
+│   ├── runpods_safe_setup.sh        # Runpods環境構築
+│   ├── runpods_fix_nnunet.sh        # nnU-Netエラー一括修正
+│   ├── convert_tiff_to_nifti.py     # TIFF→NIfTI変換
+│   ├── fix_nnunet_cv_error.py       # Cross-validationエラー修正
+│   └── fix_nnunet_io_error.py       # SimpleTiffIOエラー修正
+│
+└── docs/                        # ドキュメント
+    ├── FILE_STRUCTURE.md        # このファイル
+    ├── REAL_DATA_SETUP.md       # 実データ準備ガイド
+    └── upload_to_runpods.md     # Runpodsへのファイル転送方法
+```
 
-#### 📊 データ処理
-- **`kaggle_real_data_loader.py`** - Kaggle実データの自動検出・ロードクラス
-- **`real_vesuvius_dataset_v2.py`** - 実データ対応PyTorchデータセット
+## 🎯 どのノートブックを使うべきか
 
-#### 🚀 学習・推論ノートブック
-- **`vesuvius_real_data_training_complete.ipynb`** - **メイン学習ノートブック**
-  - 実データ自動検出対応
-  - 3D CNN（ResNet3D, UNet3D）
-  - 完全な学習パイプライン
-  - Kaggle提出対応
+| 目的 | 使用ファイル |
+|------|-------------|
+| **本命の学習（推奨）** | `notebooks/nnunet/vesuvius_nnunet_runpods.ipynb` |
+| ローカルで軽く試す | `notebooks/training/main_training.ipynb` |
+| SwinUNETRを試す | `notebooks/training/swinunetr_v2.ipynb` |
+| 推論・提出ファイル生成 | `notebooks/inference/inference.ipynb` |
+| Runpodsで1ファイル完結（旧版） | `notebooks/runpods/runpods_complete.ipynb` |
 
-#### 🔬 専門モデル実装
-- **`pure_pytorch_swinunetr_complete.ipynb`** - SwinUNetr完全実装
-- **`swinunetr_pure_pytorch.ipynb`** - SwinUNetr PyTorch版
-- **`swinunetr_v2_real_data_only.ipynb`** - SwinUNetr v2実データ版
+## 🔒 リポジトリに含めてはいけないもの
 
-#### 🔮 推論・提出
-- **`inference-vesuvius-surface-3d-detection.ipynb`** - 推論・予測ノートブック
+以下は `.gitignore` で除外されています。**手動でも追加しないでください**（詳細は `SECURITY.md`）:
 
-### 📋 設定・ドキュメント
-
-#### 📖 ドキュメント
-- **`README.md`** - プロジェクト概要・使用方法
-- **`REAL_DATA_SETUP.md`** - 実データセットアップ手順
-- **`FILE_STRUCTURE.md`** - このファイル（ファイル構造説明）
-- **`upload_to_runpods.md`** - Runpods環境セットアップ
-
-#### ⚙️ 環境設定
-- **`runpods_safe_setup.sh`** - Runpods安全セットアップスクリプト
-
-## 🎯 推奨使用順序
-
-### 初回セットアップ
-1. `README.md` を読む
-2. `REAL_DATA_SETUP.md` で実データ配置確認
-3. 必要に応じて `runpods_safe_setup.sh` 実行
-
-### 学習実行
-1. **`vesuvius_real_data_training_complete.ipynb`** - メイン学習
-2. `pure_pytorch_swinunetr_complete.ipynb` - 高性能モデル（オプション）
-
-### 推論・提出
-1. `inference-vesuvius-surface-3d-detection.ipynb` - 予測実行
-
-## 🗂️ ファイル分類
-
-### 🟢 必須ファイル
-- `kaggle_real_data_loader.py`
-- `real_vesuvius_dataset_v2.py` 
-- `vesuvius_real_data_training_complete.ipynb`
-
-### 🟡 専門用途
-- SwinUNetr関連ノートブック（高性能が必要な場合）
-- `inference-vesuvius-surface-3d-detection.ipynb`
-
-### 🔵 設定・ドキュメント
-- マークダウンファイル
-- セットアップスクリプト
-
-## 🧹 削除されたファイル
-
-以下の不要ファイルが削除されました：
-
-### 削除理由別
-
-#### 重複・古いバージョン
-- `real_vesuvius_dataset.py` → `real_vesuvius_dataset_v2.py`に統合
-- `vesuvius_real_data_training.ipynb` → 完全版に統合
-- 多数の古いRunpodsファイル
-
-#### デバッグ・テスト
-- `debug_data_search.py`
-- `test_medicai_transunet.py`
-
-#### 古い実装
-- TransUNet関連の古い実装
-- MONAI関連の古い実装
-- 複数の重複モデル実装
-
-#### 空・不要
-- `__pycache__/`
-- `kaggle_vesuvius_data/`（空）
-
-## ✅ 整理後の効果
-
-- **ファイル数**: 47個 → 11個（76%削減）
-- **保持**: 重要機能は完全保持
-- **見通し**: 構造が明確で使いやすい
-- **メンテナンス**: 管理しやすい構成
+- `kaggle.json` / `.kaggle/`（Kaggle APIキー）
+- `.env` 系ファイル
+- `data/`（データセット本体）、`*.tif` 等の大容量データ
+- `models/`、`*.pth` 等の学習済み重み

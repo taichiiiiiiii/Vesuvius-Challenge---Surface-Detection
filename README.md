@@ -1,173 +1,177 @@
 # 🏺 Vesuvius Challenge - 3D Surface Detection
 
-古代ヴェスヴィオ火山の噴火で埋もれた巻物の3D CTスキャンから、インクの痕跡を検出するディープラーニングプロジェクト。
+古代ヴェスヴィオ火山の噴火で埋もれた巻物の3D CTスキャンから、パピルス表面のインク痕跡を検出するディープラーニングプロジェクト。
+
+[Kaggle Vesuvius Challenge - Surface Detection](https://scrollprize.org/) 向けの3Dセマンティックセグメンテーション実装です。
 
 ## 📌 概要
 
-このプロジェクトは、Kaggle Vesuvius Challengeのための3D表面検出システムです。PyTorchベースの3D CNNを使用して、巻物のCTスキャン画像からインクパターンを識別します。
+このリポジトリには2系統の実装があります。
 
-## ✨ 主な特徴
+| 実装 | 場所 | 状態 |
+|------|------|------|
+| **nnU-Net v2**（ResNetエンコーダー付きU-Net） | `notebooks/nnunet/` | ⭐ **現行・推奨** |
+| PyTorch 3D CNN（UNet3D / ResNet3D / SwinUNETR） | `notebooks/training/`, `notebooks/runpods/` | 旧実装（参考用） |
 
-- 🔍 **自動データ検出** - Kaggleデータを自動的に検出・ロード
-- 🎯 **複数の3Dモデル** - ResNet3D、UNet3D、SwinUNetrをサポート
-- 📊 **完全なMLパイプライン** - データ前処理から学習、推論、提出まで
-- ☁️ **Runpods対応** - クラウドGPU環境での実行に最適化
-- 🚀 **すぐに実行可能** - 最小限の設定で動作
+### 主な特徴
+
+- 🏆 **nnU-Net v2** - 医療画像セグメンテーションの業界標準フレームワークによる学習パイプライン
+- 🔍 **自動データ検出** - Kaggleデータの自動ダウンロード・検出・ロード
+- ☁️ **Runpods対応** - クラウドGPU環境での実行に最適化（GPU種別の自動検出）
+- 🎭 **デモデータフォールバック** - 実データなしでもパイプラインの動作確認が可能
 
 ## 📁 プロジェクト構成
 
 ```
 .
+├── README.md                  # このファイル
+├── SECURITY.md                # 🔒 セキュリティポリシー（必読）
+├── CLAUDE.md                  # Claude Code用プロジェクトコンテキスト
+├── requirements.txt           # 依存パッケージ
+│
 ├── notebooks/
-│   ├── training/              # 学習用ノートブック
-│   │   ├── main_training.ipynb      # メイン学習スクリプト ⭐
-│   │   ├── swinunetr_training.ipynb # 高性能モデル学習
-│   │   └── swinunetr_v2.ipynb       # 改良版モデル
-│   │
-│   ├── inference/             # 推論・予測用
-│   │   └── inference.ipynb   # 提出ファイル生成
-│   │
-│   └── runpods/              # クラウド環境用
-│       └── runpods_complete.ipynb   # Runpods完全版
+│   ├── nnunet/                # ⭐ 現行実装（nnU-Net v2）
+│   │   └── vesuvius_nnunet_runpods.ipynb
+│   ├── training/              # 旧実装: ローカル/汎用 学習ノートブック
+│   ├── inference/             # 推論・提出ファイル生成
+│   └── runpods/               # 旧実装: Runpods向けオールインワン版
 │
-├── src/                      # ソースコード
+├── src/                       # 共通モジュール
 │   ├── unified_data_loader.py       # 統合データローダー
-│   └── download_kaggle_data.py      # データ自動取得
+│   └── download_kaggle_data.py      # Kaggleデータ自動取得
 │
-├── docs/                     # ドキュメント
-│   ├── REAL_DATA_SETUP.md   # データ準備ガイド
-│   └── upload_to_runpods.md # Runpods設定方法
+├── scripts/                   # セットアップ・修正スクリプト
+│   ├── runpods_safe_setup.sh        # Runpods環境構築
+│   ├── runpods_fix_nnunet.sh        # nnU-Netエラー一括修正
+│   ├── convert_tiff_to_nifti.py     # TIFF→NIfTI変換
+│   ├── fix_nnunet_cv_error.py       # Cross-validationエラー修正
+│   └── fix_nnunet_io_error.py       # SimpleTiffIOエラー修正
 │
-└── scripts/                  # セットアップスクリプト
-    └── runpods_safe_setup.sh # 環境構築スクリプト
+└── docs/                      # 詳細ドキュメント
+    ├── FILE_STRUCTURE.md      # ファイル構造の説明
+    ├── REAL_DATA_SETUP.md     # データ準備ガイド
+    └── upload_to_runpods.md   # Runpodsへのファイル転送方法
 ```
+
+## 🔒 セキュリティ（最初に読んでください）
+
+- **`kaggle.json`（APIキー）を絶対にコミットしないでください。** リポジトリ外（`~/.kaggle/` または Runpodsの `/workspace/`）に配置するか、環境変数 `KAGGLE_USERNAME` / `KAGGLE_KEY` を使用します
+- ノートブックのセルに認証情報を書いたまま保存・共有しないでください
+- コミット前に出力セルをクリアしてください: `jupyter nbconvert --clear-output --inplace <notebook>.ipynb`
+
+詳細は **[SECURITY.md](SECURITY.md)** を参照してください。
 
 ## 🚀 クイックスタート
 
 ### 前提条件
 
-- Python 3.8以上
-- CUDA対応GPU（推奨: 8GB以上のVRAM）
-- 50GB以上のディスクスペース
+- Python 3.9以上
+- CUDA対応GPU（nnU-Net v2はVRAM 16GB以上を推奨）
+- ディスク空き容量 50GB以上（生データ約25GB）
 
 ### 1. 環境構築
 
 ```bash
-# リポジトリをクローン
 git clone https://github.com/taichiiiiiiii/Vesuvius-Challenge---Surface-Detection.git
 cd Vesuvius-Challenge---Surface-Detection
-
-# 依存パッケージのインストール
 pip install -r requirements.txt
 ```
 
-### 2. データ準備
-
-#### オプション A: Kaggleから自動ダウンロード
-
-```python
-# notebooks/training/main_training.ipynb 内で実行
-from src.download_kaggle_data import download_competition_data
-download_competition_data()
-```
-
-#### オプション B: 手動配置
+### 2. Kaggle認証の設定
 
 ```bash
-# データを以下の構造で配置
-data/
-└── vesuvius-challenge-surface-detection/
-    ├── train_images/      # 訓練画像
-    ├── train_labels/      # ラベル（オプション）
-    └── train.csv          # メタデータ
+# 推奨: 環境変数
+export KAGGLE_USERNAME="your_username"
+export KAGGLE_KEY="your_api_key"
+
+# または標準の場所に配置（リポジトリ内には置かない）
+mkdir -p ~/.kaggle
+mv ~/Downloads/kaggle.json ~/.kaggle/kaggle.json
+chmod 600 ~/.kaggle/kaggle.json
 ```
 
-### 3. 学習実行
+### 3. データ準備
 
 ```bash
-# Jupyterノートブックを起動
+python src/download_kaggle_data.py
+```
+
+または手動配置（詳細は [docs/REAL_DATA_SETUP.md](docs/REAL_DATA_SETUP.md)）:
+
+```
+data/vesuvius-challenge-surface-detection/
+├── train_images/      # 3D CTボリューム (*.tif)
+├── train_labels/      # セグメンテーションマスク (*.tif)
+└── train.csv          # メタデータ
+```
+
+### 4a. 学習（現行: nnU-Net v2 / Runpods推奨）
+
+```bash
+# Runpods等のGPU環境で
+jupyter lab --ip=0.0.0.0 --port=8888 --allow-root
+# → notebooks/nnunet/vesuvius_nnunet_runpods.ipynb を開いて上から実行
+```
+
+GPU別の推奨設定:
+
+| GPU | VRAM | Configuration | パッチサイズ | 250エポック推定時間 |
+|-----|------|---------------|-------------|-------------------|
+| A6000 | 48GB | 3d_fullres | (96,96,96) | 12-15時間 |
+| RTX 4090 | 24GB | 3d_fullres | (80,80,80) | 15-20時間 |
+| T4 | 16GB | 3d_lowres | (64,64,64) | 20-25時間 |
+
+### 4b. 学習（旧実装: PyTorch 3D CNN / ローカル向け）
+
+```bash
 jupyter notebook notebooks/training/main_training.ipynb
 ```
 
-ノートブックを開き、セルを順番に実行してください。
-
-### 4. 推論・提出
+### 5. 推論・提出
 
 ```bash
-# 学習済みモデルで予測
+# nnU-Net v2
+nnUNetv2_predict -d 100 -c 3d_fullres -f all \
+    -i /path/to/test_images -o /path/to/predictions \
+    -p nnUNetResEncUNetMPlans -tr nnUNetTrainer_250epochs
+
+# 旧実装
 jupyter notebook notebooks/inference/inference.ipynb
 ```
-
-## 🏗️ モデルアーキテクチャ
-
-| モデル | 特徴 | 推奨用途 |
-|--------|------|----------|
-| **UNet3D** | バランス型 | 一般的な使用（推奨） |
-| **ResNet3D** | 軽量・高速 | メモリ制限環境 |
-| **SwinUNetr** | 最高精度 | 高性能GPU環境 |
-
-## ⚙️ 設定カスタマイズ
-
-```python
-# notebooks/training/main_training.ipynb で設定
-config = {
-    'model_type': 'unet3d',     # モデル選択
-    'batch_size': 4,             # バッチサイズ
-    'num_epochs': 20,            # エポック数
-    'learning_rate': 1e-4,       # 学習率
-    'volume_size': (128, 128),   # ボリュームサイズ
-    'volume_depth': 16           # Z軸の深さ
-}
-```
-
-## 💡 メモリ最適化
-
-GPU メモリが不足する場合：
-
-```python
-# 設定を調整
-config = {
-    'batch_size': 2,             # 小さく
-    'volume_size': (64, 64),     # 縮小
-    'volume_depth': 8,           # 浅く
-    'gradient_accumulation': 4   # 勾配累積を使用
-}
-```
-
-## 📊 パフォーマンス
-
-| 設定 | VRAM使用量 | 学習時間/エポック | 推奨GPU |
-|------|------------|-------------------|---------|
-| フル | ~12GB | ~15分 | RTX 3090/4090 |
-| 標準 | ~8GB | ~10分 | RTX 3070/3080 |
-| 軽量 | ~4GB | ~5分 | RTX 3060/2070 |
 
 ## 🛠️ トラブルシューティング
 
 ### CUDA out of memory
-- バッチサイズを半分に削減
-- ボリュームサイズを64x64に縮小
-- Mixed Precision学習を有効化
+- nnU-Net: configurationを `3d_lowres` に変更
+- 旧実装: バッチサイズを半分に、ボリュームサイズを縮小
+
+### nnU-Netのエラー（SimpleTiffIO / Cross-validation）
+```bash
+bash scripts/runpods_fix_nnunet.sh          # 一括修正
+python scripts/fix_nnunet_io_error.py       # TIFF I/Oエラー
+python scripts/fix_nnunet_cv_error.py       # n_splits エラー
+```
 
 ### データが見つからない
-- Kaggle APIトークンを設定（`~/.kaggle/kaggle.json`）
-- `docs/REAL_DATA_SETUP.md`を参照
-- デモデータモードで動作確認
+- Kaggle認証を確認（[SECURITY.md](SECURITY.md)の推奨方法で設定）
+- [docs/REAL_DATA_SETUP.md](docs/REAL_DATA_SETUP.md) の配置パスを確認
+- 実データがない場合はデモデータで自動フォールバックします
 
 ### 学習が収束しない
-- 学習率を1/10に削減
-- データ拡張を調整
-- より長いエポック数で学習
+- nnU-Netの `progress.png` を確認（通常100-150エポックで収束開始）
+- 旧実装では学習率を1/10に下げて再試行
 
 ## 📚 詳細ドキュメント
 
-- [データ準備ガイド](docs/REAL_DATA_SETUP.md)
 - [ファイル構造説明](docs/FILE_STRUCTURE.md)
-- [Runpods環境セットアップ](docs/upload_to_runpods.md)
+- [データ準備ガイド](docs/REAL_DATA_SETUP.md)
+- [Runpodsへのファイル転送](docs/upload_to_runpods.md)
+- [セキュリティポリシー](SECURITY.md)
 
 ## 🤝 貢献
 
-プルリクエスト歓迎です！大きな変更の場合は、まずIssueを作成して変更内容を議論してください。
+プルリクエスト歓迎です。大きな変更の場合は、まずIssueを作成して変更内容を議論してください。
+**認証情報や大容量データを含むコミットは受け付けられません。**
 
 ## 📄 ライセンス
 
@@ -176,11 +180,9 @@ config = {
 ## 🙏 謝辞
 
 - Vesuvius Challengeの主催者とコミュニティ
-- PyTorch、MONAI開発チーム
+- [nnU-Net](https://github.com/MIC-DKFZ/nnUNet)、PyTorch、MONAI開発チーム
 - Kaggleプラットフォーム
 
 ---
 
 **📮 質問・サポート**: GitHubのIssuesページをご利用ください。
-
-**⭐ このプロジェクトが役立った場合は、スターをお願いします！**

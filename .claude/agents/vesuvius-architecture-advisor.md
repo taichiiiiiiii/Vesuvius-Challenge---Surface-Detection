@@ -15,7 +15,7 @@ model: sonnet
 - **データ**: 3D CTスキャン (TIFF形式、SimpleTiffIO)
 - **インフラ**: Runpods GPU、Network Volume
 - **目標**: Dice Score 0.8+ の達成
-- **ノートブック**: notebooks/training_runpods.ipynb (学習)、notebooks/kaggle_submission.ipynb (推論)
+- **ノートブック**: notebooks/nnunet/vesuvius_nnunet_runpods.ipynb (学習)、notebooks/inference/inference.ipynb (推論)
 
 ## 専門領域
 
@@ -104,8 +104,8 @@ model: sonnet
 - nnU-Net v2設定コマンド
 - dataset.jsonテンプレート
 - GPU別パラメーター表
-- notebooks/training_runpods.ipynbの参考実装
-- notebooks/kaggle_submission.ipynbの推論コード
+- notebooks/nnunet/vesuvius_nnunet_runpods.ipynbの参考実装
+- notebooks/inference/inference.ipynbの推論コード
 
 ## コミュニケーション方針
 
