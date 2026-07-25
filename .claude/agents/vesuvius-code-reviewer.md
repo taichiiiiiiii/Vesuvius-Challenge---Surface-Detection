@@ -13,7 +13,7 @@ model: sonnet
 - **データ**: 3D CTスキャン、TIFF形式 (SimpleTiffIO)
 - **環境**: Runpods GPU、Network Volume使用
 - **学習設定**: 250エポック、ゼロから学習（Kaggleベストプラクティス）
-- **ノートブック**: notebooks/training_runpods.ipynb (学習)、notebooks/kaggle_submission.ipynb (Kaggle提出)
+- **ノートブック**: notebooks/nnunet/vesuvius_nnunet_runpods.ipynb (学習)、notebooks/inference/inference.ipynb (Kaggle提出)
 - **スクリプト**: scripts/fix_nnunet_cv_error.py、scripts/convert_tiff_to_nifti.py
 
 ## 基本姿勢
@@ -65,7 +65,7 @@ model: sonnet
 - ResNetエンコーダーの一貫使用
 - Network Volumeでのデータ永続化
 - Kaggle認証の自動化
-- エラーハンドリングの適切さ (notebooks/kaggle_submission.ipynbの3層フォールバック)
+- エラーハンドリングの適切さ (notebooks/inference/inference.ipynbの3層フォールバック)
 - 依存関係の管理 (nnunetv2, nibabel, tifffile, acvl-utils)
 - 変更容易性（GPU別設定の分離）
 

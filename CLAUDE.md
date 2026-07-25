@@ -4,25 +4,44 @@
 
 古代ローマのヴェスヴィオ火山噴火で埋もれた巻物の3D CTスキャンデータから、パピルス表面のインク痕跡を検出するディープラーニングモデルの開発プロジェクトです。
 
-### 現在の実装: nnU-Net v2 (2024年12月更新)
+### 現在の実装: nnU-Net v2
 - **フレームワーク**: nnU-Net v2 - 医療画像セグメンテーションの業界標準
 - **アーキテクチャ**: ResNetエンコーダー付きU-Net (nnUNetPlannerResEncM)
 - **学習戦略**: ゼロからの学習、250エポック（Kaggleベストプラクティス準拠）
-- **データ処理**: SimpleTiffIO による直接TIFF処理（NIfTI変換不要）
+- **旧実装**: PyTorch 3D CNN / SwinUNETR（`notebooks/training/`, `notebooks/runpods/` に参考用として保持）
 
 ## ファイル構成
 
 ```
 .
-├── runpods_vesuvius_nnunet_complete.ipynb       # メイン学習ノートブック（nnU-Net v2）
-├── RUNPODS_DEPLOYMENT_GUIDE.md                  # Runpods環境構築・実行ガイド
-├── nnUNet_v2_GUIDE.md                           # nnU-Net v2詳細ガイド
-├── fix_nnunet_cv_error.py                       # Cross-validation エラー修正
-└── training/
-    ├── 01_segformer3d/                          # SegFormer3D実装（旧版）
-    ├── 02_nnunet_v2/                            # nnU-Net v2実装（現行版）
-    └── shared/                                   # 共通ユーティリティ
+├── README.md                                    # プロジェクト概要
+├── SECURITY.md                                  # セキュリティポリシー
+├── requirements.txt                             # 依存パッケージ
+├── notebooks/
+│   ├── nnunet/
+│   │   └── vesuvius_nnunet_runpods.ipynb        # ⭐ メイン学習ノートブック（nnU-Net v2）
+│   ├── training/                                # 旧実装（PyTorch 3D CNN / SwinUNETR）
+│   ├── inference/                               # 推論・提出ファイル生成
+│   └── runpods/                                 # 旧実装（Runpodsオールインワン版）
+├── src/
+│   ├── unified_data_loader.py                   # 統合データローダー
+│   └── download_kaggle_data.py                  # Kaggleデータ自動取得
+├── scripts/
+│   ├── runpods_safe_setup.sh                    # Runpods環境構築
+│   ├── runpods_fix_nnunet.sh                    # nnU-Netエラー一括修正
+│   ├── convert_tiff_to_nifti.py                 # TIFF→NIfTI変換
+│   ├── fix_nnunet_cv_error.py                   # Cross-validationエラー修正
+│   └── fix_nnunet_io_error.py                   # SimpleTiffIOエラー修正
+└── docs/                                        # 詳細ドキュメント
 ```
+
+## セキュリティ上の注意（コード変更時に必ず守ること）
+
+- **認証情報（kaggle.json、APIキー）をコミットしない** — `.gitignore` で除外済みだが、コードやノートブックのセルに直接書かないこと
+- 認証は環境変数 `KAGGLE_USERNAME` / `KAGGLE_KEY`、または `~/.kaggle/kaggle.json`・`/workspace/kaggle.json`（Runpods）を使用
+- `kaggle.json` をリポジトリ配下（カレントディレクトリ）に書き込むコードを追加しない
+- ノートブックはコミット前に出力セルをクリアする
+- 詳細は `SECURITY.md` を参照
 
 ## 技術スタック
 
@@ -96,7 +115,7 @@
 2. **Podにアタッチ** (`/workspace/persistent_storage`)
 3. **Kaggle認証設定**:
 ```bash
-# kaggle.jsonを/workspace/に配置
+# kaggle.jsonを/workspace/に配置（リポジトリ内には置かない）
 chmod 600 /workspace/kaggle.json
 ```
 4. **ノートブック実行**:
@@ -104,8 +123,7 @@ chmod 600 /workspace/kaggle.json
 # Jupyter起動
 jupyter lab --ip=0.0.0.0 --port=8888 --allow-root
 
-# runpods_vesuvius_nnunet_complete.ipynbを開く
-# Run All実行
+# notebooks/nnunet/vesuvius_nnunet_runpods.ipynb を開いて実行
 ```
 
 ### 自動機能
@@ -138,8 +156,13 @@ nnUNetv2_predict -d 100 -c 3d_fullres -f all \
 - バッチサイズは常に1（nnU-Net推奨）
 
 ### データ見つからないエラー
-- **Kaggle認証確認**: kaggle.jsonの配置と権限（chmod 600）
+- **Kaggle認証確認**: 環境変数またはkaggle.jsonの配置と権限（chmod 600）
 - **前処理済みデータ優先**: 91.8GBのデータセットを自動取得
+
+### nnU-Net固有のエラー
+- **SimpleTiffIO / I/Oエラー**: `python scripts/fix_nnunet_io_error.py`
+- **Cross-validation (n_splits) エラー**: `python scripts/fix_nnunet_cv_error.py`
+- **一括修正**: `bash scripts/runpods_fix_nnunet.sh`
 
 ### 学習が収束しない
 - **progress.png確認**: 通常100-150エポックで収束開始
@@ -153,40 +176,33 @@ torch.cuda.set_per_process_memory_fraction(0.95)
 torch.backends.cudnn.benchmark = True
 ```
 
-### 混合精度学習（オプション）
-```python
-keras.mixed_precision.set_global_policy('mixed_float16')
-```
-
-### マルチGPU（利用可能な場合）
-```python
-data_parallel = keras.distribution.DataParallel()
-keras.distribution.set_distribution(data_parallel)
+### OpenBLASスレッド制限（前処理時の安定化）
+```bash
+export OMP_NUM_THREADS=4
+export OPENBLAS_NUM_THREADS=4
+export MKL_NUM_THREADS=4
 ```
 
 ## 実験管理
 
-### 設定の保存
-全ての実験設定は自動的にJSONファイルに保存:
-- `experiment_config.json`: 実験パラメータ
-- `training_config.json`: 学習設定
-- `model_summary.txt`: モデル構造
-
-### チェックポイント命名規則
+### チェックポイント（nnU-Net標準）
 ```
-checkpoint_ep{epoch:03d}_dice{val_dice:.4f}.h5
-backup_ep{epoch:03d}.h5
-best_model.weights.h5
+nnUNet_results/Dataset100_VesuviusSurface/
+└── nnUNetTrainer_250epochs__nnUNetResEncUNetMPlans__3d_fullres/
+    └── fold_all/
+        ├── checkpoint_best.pth
+        ├── checkpoint_final.pth
+        └── progress.png
 ```
 
 ## コスト最適化
 
 ### Runpods料金目安
-| GPU | 時間単価 | 200エポック推定時間 | 推定コスト |
+| GPU | 時間単価 | 250エポック推定時間 | 推定コスト |
 |-----|----------|-------------------|-----------|
-| RTX 3080 | $0.3/h | 18-24h | $5-10 |
-| RTX 3090 | $0.5/h | 12-18h | $6-9 |
-| A100 | $2/h | 6-8h | $12-16 |
+| RTX 3090 | $0.5/h | 15-20h | $8-10 |
+| RTX 4090 | $0.7/h | 15-20h | $11-14 |
+| A6000 | $0.8/h | 12-15h | $10-12 |
 
 ### Network Volume
 - 50GB: 約$5/月
@@ -212,8 +228,7 @@ best_model.weights.h5
 
 ## 参考リンク
 
-- [Medic-AI Documentation](https://github.com/innat/medic-ai)
-- [Keras 3 Multi-backend](https://keras.io/keras_3/)
+- [nnU-Net](https://github.com/MIC-DKFZ/nnUNet)
 - [Vesuvius Challenge](https://scrollprize.org/)
 - [Runpods Documentation](https://docs.runpods.io/)
 
@@ -223,3 +238,4 @@ best_model.weights.h5
 - 大規模学習には適切なGPUリソースが必要です
 - Network Volumeなしでの実行はデータ損失のリスクがあります
 - 自動停止機能を必ず有効にして課金を防いでください
+- 認証情報の取り扱いは `SECURITY.md` に従ってください

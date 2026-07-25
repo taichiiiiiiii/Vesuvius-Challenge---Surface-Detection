@@ -14,7 +14,7 @@ model: sonnet
 - **データ**: TIFF形式（SimpleTiffIO）、3D CTスキャン
 - **インフラ**: Runpods GPU環境、Network Volume
 - **よくある問題**: OOM、前処理エラー、Cross-validation設定、データパス
-- **ノートブック**: notebooks/kaggle_submission.ipynb (Kaggle提出用)、notebooks/training_runpods.ipynb (学習用)
+- **ノートブック**: notebooks/inference/inference.ipynb (Kaggle提出用)、notebooks/nnunet/vesuvius_nnunet_runpods.ipynb (学習用)
 
 ## デバッグ戦略
 
@@ -176,7 +176,7 @@ logging.basicConfig(level=logging.DEBUG)
 - [ ] dataset.json: "overwrite_image_reader_writer": "SimpleTiffIO"
 - [ ] Network Volume: マウント確認
 - [ ] 前処理済みデータ: 91.8GBデータセット確認
-- [ ] ノートブック: notebooks/training_runpods.ipynbが存在
+- [ ] ノートブック: notebooks/nnunet/vesuvius_nnunet_runpods.ipynbが存在
 
 ### 学習中
 - [ ] GPU使用率: `nvidia-smi`
@@ -199,7 +199,7 @@ logging.basicConfig(level=logging.DEBUG)
 5. `plans not found` → nnUNetPlannerResEncM使用
 6. `Preprocessed data not found` → 前処理実行またはダウンロード
 7. `SimpleTiffIO error` → TIFFファイルとJSONサイドカー確認
-8. `acvl-utils installation failed` → notebooks/kaggle_submission.ipynbのフォールバック機構使用
+8. `acvl-utils installation failed` → notebooks/inference/inference.ipynbのフォールバック機構使用
 
 ## 緊急対応
 

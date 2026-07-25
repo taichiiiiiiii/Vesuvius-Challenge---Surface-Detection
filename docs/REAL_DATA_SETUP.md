@@ -1,103 +1,94 @@
 # Vesuvius Challenge 実データセットアップ手順
 
-## 現状
-- ✅ データローダーコード作成完了 (`kaggle_real_data_loader.py`, `real_vesuvius_dataset_v2.py`)
-- ✅ 自動検出・フォールバック機能実装済み
-- ❌ 実際のTIFFファイルはまだ配置されていない
+## 概要
 
-## 実データを使用する方法
+- データローダー: `src/unified_data_loader.py`（実データ自動検出・デモデータフォールバック付き）
+- ダウンローダー: `src/download_kaggle_data.py`（Kaggle API経由の自動取得）
+- 実データが見つからない場合はデモデータで学習パイプラインの動作確認が可能
 
-### 1. データ配置オプション
+## 1. Kaggle認証の設定
 
-以下のいずれかの場所にVesuviusデータを配置してください：
-
-```
-プロジェクトディレクトリ内：
-├── vesuvius-challenge-surface-detection/
-│   ├── train_images/
-│   │   ├── *.tif
-│   ├── train_labels/  (オプション)
-│   │   ├── *.tif
-│   └── train.csv
-├── kaggle_vesuvius_data/
-├── vesuvius_pure_pytorch_data/
-└── vesuvius_challenge_surface_detection/
-```
-
-### 2. 自動検出パターン
-
-コードは以下のパターンで自動検出します：
-- `train_images/` ディレクトリ内の `.tif` ファイル
-- `deprecated_train_images/` ディレクトリ（新形式）
-- 対応する `train_labels/` または `deprecated_train_labels/`
-- `train.csv` ファイル（メタデータ）
-
-### 3. Kaggleから直接ダウンロード
-
-```python
-import kaggle
-
-# データセットダウンロード
-kaggle.api.competition_download_files('vesuvius-challenge-surface-detection', 
-                                    path='./vesuvius_data')
-
-# 展開
-import zipfile
-with zipfile.ZipFile('./vesuvius_data/vesuvius-challenge-surface-detection.zip', 'r') as zip_ref:
-    zip_ref.extractall('./vesuvius-challenge-surface-detection')
-```
-
-### 4. 動作確認
+> ⚠️ **セキュリティ**: `kaggle.json` は**リポジトリ内に置かないでください**。
+> 推奨は環境変数、または `~/.kaggle/kaggle.json`（Runpodsでは `/workspace/kaggle.json`）です。
+> 詳細は [SECURITY.md](../SECURITY.md) を参照。
 
 ```bash
-python3 kaggle_real_data_loader.py
+# 方法A: 環境変数（推奨）
+export KAGGLE_USERNAME="your_username"
+export KAGGLE_KEY="your_api_key"
+
+# 方法B: 標準の場所に配置
+mkdir -p ~/.kaggle
+mv ~/Downloads/kaggle.json ~/.kaggle/kaggle.json
+chmod 600 ~/.kaggle/kaggle.json
 ```
 
-実データが見つかれば以下のような出力が表示されます：
-```
-✅ データパス発見: ./vesuvius-challenge-surface-detection
-📊 画像数: 150
-🏷️ ラベル数: 150
+APIトークンは [Kaggle Settings](https://www.kaggle.com/settings/account) → "Create New API Token" で取得できます。
+
+## 2. データの自動ダウンロード
+
+```bash
+python src/download_kaggle_data.py
 ```
 
-### 5. 学習での使用
+または Python から:
 
 ```python
-from real_vesuvius_dataset_v2 import RealVesuviusDatasetV2
+from src.download_kaggle_data import download_vesuvius_dataset
+dataset_path = download_vesuvius_dataset(output_dir="./data")
+```
 
-config = {
-    'volume_count': 20,
-    'volume_depth': 16, 
-    'volume_size': (128, 128),
-    'batch_size': 4
-}
+## 3. 手動配置する場合のディレクトリ構造
 
-# 実データが見つかれば自動で使用、なければデモデータ
-dataset = RealVesuviusDatasetV2(config, split='train')
+以下のいずれかの場所に配置してください（自動検出されます）:
+
+```
+./data/vesuvius-challenge-surface-detection/     # ローカル推奨
+/workspace/vesuvius-challenge-surface-detection/ # Runpods
+./vesuvius-challenge-surface-detection/
+
+└── vesuvius-challenge-surface-detection/
+    ├── train_images/      # 3D CTボリューム (*.tif)
+    ├── train_labels/      # セグメンテーションマスク (*.tif, オプション)
+    └── train.csv          # メタデータ
+```
+
+## 4. 動作確認
+
+```bash
+python src/unified_data_loader.py
+```
+
+実データが見つかった場合の出力例:
+
+```
+✅ 実データ自動検出: ./data/vesuvius-challenge-surface-detection
+📊 150個のTIFFファイル発見
+✅ 実データ使用: ./data/vesuvius-challenge-surface-detection
+```
+
+## 5. 学習での使用
+
+```python
+from src.unified_data_loader import create_data_loaders
+
+train_loader, val_loader = create_data_loaders(
+    volume_size=(96, 96, 64),
+    batch_size=4,
+    data_path=None,   # None = 自動検出
+)
 ```
 
 ## フォールバック動作
 
-実データが見つからない場合：
+実データが見つからない場合:
+
 - ✅ 高品質デモデータを自動生成
-- ✅ 完全に同じAPIで動作継続
-- ✅ 学習・検証が可能
-
-## 実装済み機能
-
-- ✅ 柔軟なパス検出
-- ✅ 複数データ形式対応
-- ✅ ZIP自動展開
-- ✅ エラー処理とフォールバック
-- ✅ メモリ効率的なロード
-- ✅ 3D ボリューム自動生成
-- ✅ ラベル補完（ない場合は閾値処理）
+- ✅ 同一APIで動作継続（コード変更不要）
+- ✅ パイプラインの動作確認・デバッグに利用可能
 
 ## 注意事項
 
-1. **メモリ制限**: 大量のTIFFファイルを一度に読み込まない設計
-2. **データ品質**: 実データの統計情報を活用してリアルなボリューム生成
-3. **互換性**: 既存の学習コードとの完全互換性
-4. **エラー処理**: 破損ファイルやフォーマット違いに対応
-
-実データが配置されれば、コードの変更なしで自動的に実データを使用します。
+1. **容量**: 生データは約25GB。ディスク空き容量を確認してください
+2. **メモリ**: ローダーはスライス単位で読み込み、メモリ効率を優先しています
+3. **ラベルなしデータ**: `train_labels/` がない場合は閾値ベースの簡易ラベルを生成します
