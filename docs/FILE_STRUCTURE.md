@@ -5,7 +5,6 @@
 ```
 .
 ├── README.md                    # プロジェクト概要・使用方法
-├── CLAUDE.md                    # Claude Code 用プロジェクトコンテキスト
 ├── SECURITY.md                  # セキュリティポリシー（認証情報の扱い方）
 ├── requirements.txt             # Python依存パッケージ
 │

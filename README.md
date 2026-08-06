@@ -26,7 +26,6 @@
 .
 ├── README.md                  # このファイル
 ├── SECURITY.md                # 🔒 セキュリティポリシー（必読）
-├── CLAUDE.md                  # Claude Code用プロジェクトコンテキスト
 ├── requirements.txt           # 依存パッケージ
 │
 ├── notebooks/
